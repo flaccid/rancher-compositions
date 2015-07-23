@@ -1,2 +1,6 @@
 artifactory-pro:
   scale: 1
+artifactory-pro-lb:
+  scale: 1
+  load_balancer_config:
+    name: artifactory-pro-lb config
