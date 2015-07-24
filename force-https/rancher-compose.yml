@@ -1,0 +1,6 @@
+force-https-lb:
+  scale: 1
+  load_balancer_config:
+    name: force-https-lb config
+force-https-server:
+  scale: 1
