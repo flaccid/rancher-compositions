@@ -1,0 +1,2 @@
+docker-registry:
+  scale: 1

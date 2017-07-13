@@ -1,0 +1,7 @@
+docker-registry:
+  ports:
+  - 5000/tcp
+  restart: always
+  tty: true
+  image: registry:2
+  stdin_open: true
