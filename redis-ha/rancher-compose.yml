@@ -1,0 +1,56 @@
+version: '2'
+services:
+  redis-master:
+    start_on_create: true
+  sentinel:
+    scale: 3
+    start_on_create: true
+  redis-lb:
+    scale: 1
+    start_on_create: true
+    lb_config:
+      certs: []
+      port_rules:
+      - priority: 1
+        protocol: tcp
+        service: redis-master
+        source_port: 6379
+        target_port: 6379
+    health_check:
+      healthy_threshold: 2
+      response_timeout: 2000
+      port: 42
+      unhealthy_threshold: 3
+      initializing_timeout: 60000
+      interval: 2000
+      strategy: recreate
+      reinitializing_timeout: 60000
+  sentinel-lb:
+    scale: 1
+    start_on_create: true
+    lb_config:
+      certs: []
+      port_rules:
+      - priority: 1
+        protocol: tcp
+        service: sentinel
+        source_port: 26379
+        target_port: 26379
+    health_check:
+      healthy_threshold: 2
+      response_timeout: 2000
+      port: 42
+      unhealthy_threshold: 3
+      initializing_timeout: 60000
+      interval: 2000
+      strategy: recreate
+      reinitializing_timeout: 60000
+  redis-pool:
+    scale: 5
+    start_on_create: true
+  redis-patient0:
+    scale: 1
+    start_on_create: true
+  redis-sentinel-proxy:
+    scale: 2
+    start_on_create: true

@@ -1,0 +1,49 @@
+version: '2'
+services:
+  redis-master:
+    image: rancher/dns-service
+    links:
+    - redis-patient0:redis-patient0
+  sentinel:
+    image: erichsu/redis-sentinel
+    environment:
+      SENTINEL_DOWN_AFTER: '2000'
+      SENTINEL_FAILOVER: '3000'
+  redis-lb:
+    image: rancher/lb-service-haproxy:v0.7.5
+    ports:
+    - 6379:6379/tcp
+    labels:
+      io.rancher.container.agent.role: environmentAdmin
+      io.rancher.container.create_agent: 'true'
+      io.rancher.scheduler.global: 'true'
+  sentinel-lb:
+    image: rancher/lb-service-haproxy:v0.7.5
+    ports:
+    - 26379:26379/tcp
+    labels:
+      io.rancher.container.agent.role: environmentAdmin
+      io.rancher.container.create_agent: 'true'
+      io.rancher.scheduler.global: 'true'
+  redis-pool:
+    image: redis:3.2.5-alpine
+    command:
+    - /bin/sh
+    - -c
+    - redis-server --slaveof $$(redis-cli -h sentinel-lb -p 26379 SENTINEL get-master-addr-by-name mymaster | head -n1) 6379
+  redis-patient0:
+    image: redis:3.2.5-alpine
+    labels:
+      io.rancher.container.start_once: 'true'
+    command: 'timeout -t 60 redis-server'
+  redis-sentinel-proxy:
+    image: flaccid/redis-sentinel-proxy
+    environment:
+      REDIS_MASTER_NAME: mymaster
+      SENTINEL_ADDRESS: sentinel-lb:26379
+    stdin_open: true
+    tty: true
+    links:
+    - sentinel-lb:sentinel-lb
+    labels:
+      io.rancher.container.pull_image: always
